@@ -1,4 +1,5 @@
 import type { DatasetStatus, SearchResult } from '../types';
+import type { DeepFound, DeepProgress } from './deepSearch';
 
 type PendingRequest = { resolve: (value: DatasetStatus | SearchResult) => void; reject: (error: Error) => void; cleanup: () => void };
 
@@ -44,5 +45,24 @@ export class PiSearchClient {
 
   async load(signal?: AbortSignal) { return await this.request('load', undefined, signal) as DatasetStatus; }
   async search(query: string, signal?: AbortSignal) { return await this.request('search', query, signal) as SearchResult; }
+  /** Calculates π beyond the dataset until `query` appears. Aborting terminates the calculation. */
+  deepSearch(query: string, startAfter: number, onProgress: (progress: DeepProgress) => void, signal?: AbortSignal): Promise<DeepFound> {
+    return new Promise((resolve, reject) => {
+      if (signal?.aborted) return reject(new DOMException('Aborted', 'AbortError'));
+      const worker = new Worker(new URL('../workers/deepSearch.worker.ts', import.meta.url), { type: 'module' });
+      const finish = () => { worker.terminate(); signal?.removeEventListener('abort', abort); };
+      const abort = () => { finish(); reject(new DOMException('Aborted', 'AbortError')); };
+      signal?.addEventListener('abort', abort, { once: true });
+      worker.addEventListener('message', (event: MessageEvent<{ type: 'progress'; progress: DeepProgress } | { type: 'found'; found: DeepFound } | { type: 'error'; error: string }>) => {
+        if (event.data.type === 'progress') return onProgress(event.data.progress);
+        finish();
+        if (event.data.type === 'found') resolve(event.data.found);
+        else reject(new Error(event.data.error));
+      });
+      worker.addEventListener('error', () => { finish(); reject(new Error('The calculation ran out of room on this device. Try a shorter sequence.')); });
+      worker.postMessage({ query, startAfter });
+    });
+  }
+
   dispose() { this.worker.terminate(); this.failAll(new DOMException('Aborted', 'AbortError')); }
 }

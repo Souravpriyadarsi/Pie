@@ -6,6 +6,8 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import { piDigits, isqrt } from '../src/lib/piGenerator.ts';
+import { findBeyond } from '../src/lib/deepSearch.ts';
 
 const prefix = '14159265358979323846264338327950288419716939937510';
 
@@ -101,4 +103,32 @@ with localcontext() as ctx:
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
+});
+
+test('the live generator reproduces the verified dataset digit for digit', () => {
+  const digits = readFileSync('data/pi.txt', 'ascii');
+  assert.equal(piDigits(50), prefix);
+  assert.equal(piDigits(20_000), digits.slice(0, 20_000));
+  assert.equal(isqrt(10n ** 40n), 10n ** 20n);
+  assert.equal(isqrt(10n ** 40n - 1n), 10n ** 20n - 1n);
+});
+
+test('deep search calculates past the stored digits to the first appearance', () => {
+  const digits = readFileSync('data/pi.txt', 'ascii');
+  const rounds = [];
+  const found = findBeyond('0008', 1000, (progress) => rounds.push(progress.computing));
+  assert.equal(found.match.position, digits.indexOf('0008') + 1);
+  assert.equal(found.match.position, 1598);
+  assert.equal(found.digitsSearched, 2000);
+  assert.deepEqual(rounds, [2000]);
+  assert.equal(found.match.before, digits.slice(1597 - 16, 1597));
+  assert.equal(found.match.after, digits.slice(1601, 1617));
+});
+
+test('deep search finds matches spanning a round boundary and only scans new digits', () => {
+  // Fake digits: '12' straddles positions 1000–1001, and '12' at position 5 must be ignored (already searched).
+  const fake = (count) => ('000012' + '0'.repeat(993) + '12').padEnd(count, '0').slice(0, count);
+  const found = findBeyond('12', 1000, undefined, fake);
+  assert.equal(found.match.position, 1000);
+  assert.throws(() => findBeyond('', 10), /Enter/);
 });
