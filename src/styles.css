@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #10120f;
+  --color-panel: #1a1e16;
+  --color-cream: #f0f2e9;
+  --color-lime: #b5f579;
+  --color-muted: #99a28d;
+  --color-sage: #b4c4a3;
+  --color-line: #30372a;
+  --font-sans: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+}
+
+@layer base {
+  :root { color-scheme: dark; background: var(--color-canvas); }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font-family: var(--font-sans); color: var(--color-cream); -webkit-font-smoothing: antialiased; }
+  button, a, input { -webkit-tap-highlight-color: transparent; }
+  button { cursor: pointer; }
+  button:disabled { cursor: not-allowed; opacity: .55; }
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--color-lime); outline-offset: 5px; }
+  ::selection { color: #10120f; background: #b5f579; }
+}
+
+@layer components {
+  .site-shell { @apply mx-auto max-w-7xl px-6 sm:px-10 lg:px-16; }
+  .brand-mark { @apply grid h-9 w-9 place-items-center rounded-[11px] bg-lime text-canvas; font: 33px Georgia, serif; }
+  .nav-link { @apply inline-flex items-center transition-colors hover:text-lime; }
+  .status-dot { @apply inline-block h-1.5 w-1.5 shrink-0 rounded-full; box-shadow: 0 0 10px #b5f57915; }
+  .hero-section { @apply relative grid items-center gap-8 py-13 sm:py-16 lg:grid-cols-[1.25fr_1fr] lg:gap-6 lg:py-14; }
+  .hero-title { @apply text-[52px] leading-[1.06] font-medium tracking-[-2.5px] sm:text-[72px] sm:tracking-[-3.5px] lg:text-[78px]; }
+  .hero-title .font-serif { font-size: 1.2em; line-height: .8; letter-spacing: -3px; }
+  .hero-star { @apply ml-3 inline-block h-10 w-10 align-baseline text-lime sm:ml-5 sm:h-14 sm:w-14; }
+  .pi-artwork { position: relative; height: 340px; }
+  .art-grid { position: absolute; inset: 0; background-image: radial-gradient(#9cb68524 .65px, transparent .65px); background-size: 17px 17px; mask-image: radial-gradient(ellipse, black, transparent 68%); }
+  .pi-glow { position: absolute; inset: 10%; background: radial-gradient(ellipse, #b5f57909, transparent 65%); }
+  .art-pi { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) rotate(-9deg); font: italic 185px Georgia, serif; line-height: 1; color: var(--color-lime); text-shadow: 0 0 45px #b5f57912; }
+  .art-digits { @apply absolute bg-canvas px-2 py-1 font-mono text-[11px] tracking-[0.18em] text-sage/75; }
+  .search-panel { @apply relative rounded-2xl border border-[#414d34] bg-panel p-5 sm:p-7; box-shadow: 0 12px 60px #00000014, inset 0 1px 0 #d9f9b804; }
+  .search-input-wrap { @apply flex min-h-17 items-center gap-3 rounded-[10px] border border-[#3b4632] bg-canvas p-2 pl-4 transition focus-within:border-lime/75 focus-within:ring-3 focus-within:ring-lime/5 sm:min-h-19 sm:gap-4 sm:pl-5; }
+  .search-button { @apply flex h-13 shrink-0 items-center justify-center gap-3 rounded-lg bg-lime px-4 text-[13px] font-semibold text-[#17220f] transition hover:bg-[#c9ff9a] active:scale-[.98] sm:h-14 sm:gap-7 sm:px-6; }
+  .clear-button { @apply rounded-md p-1.5 text-muted transition hover:bg-white/5 hover:text-cream; }
+  .suggestion-button { @apply rounded-md border border-[#39442f] bg-[#252e1f] px-2.5 py-1 font-mono text-[11px] text-sage transition hover:border-lime/60 hover:bg-lime/10 hover:text-lime active:scale-95; }
+  .section-heading { @apply flex items-center justify-between gap-4 border-b border-line pb-5; }
+  .section-index { @apply font-mono text-[10px] tracking-widest text-muted; }
+  .empty-state { @apply flex min-h-65 flex-col items-center justify-center py-10 text-center sm:min-h-72; }
+  .empty-orbit { @apply relative grid h-19 w-19 place-items-center rounded-full border border-lime/15; background: radial-gradient(circle, #b5f57909, transparent 75%); }
+  .empty-orbit::after { content: ''; position: absolute; inset: -6px; border: 1px dashed #b5f57910; border-radius: 50%; }
+  .query-tag { @apply ml-1 inline-block max-w-full break-all rounded-md border border-lime/15 bg-lime/5 px-2 py-1 font-mono text-[12px] text-lime; }
+  .subtle-button { @apply inline-flex items-center gap-2 rounded-md px-2 py-1.5 text-[11px] text-sage transition hover:bg-lime/5 hover:text-lime; }
+  .stat-card { @apply flex min-w-0 flex-col gap-5 rounded-xl border border-line bg-[#181c14] px-5 py-6 sm:px-6; }
+  .stat-card-featured { @apply border-[#486338]; background: linear-gradient(115deg, #26351d, #1c2716); }
+  .stat-label { @apply font-mono text-[9px] tracking-[0.16em] text-sage; }
+  .stat-value { @apply font-mono text-[clamp(23px,4.7vw,36px)] leading-none font-normal tracking-[-1.5px]; }
+  .stat-card-featured .stat-value { @apply text-[42px]; }
+  .stat-caption { @apply mt-auto text-[11px] text-muted; }
+  .match-row { @apply grid grid-cols-[24px_1fr] items-center gap-x-3 gap-y-3 border-b border-line bg-[#141710] px-4 py-5 transition-colors last:border-0 hover:bg-[#1a2114] sm:grid-cols-[28px_116px_minmax(0,1fr)] sm:px-5 md:grid-cols-[28px_120px_minmax(0,1fr)_16px]; }
+  .digit-context { @apply col-span-2 flex min-w-0 items-center overflow-x-auto whitespace-nowrap py-1 font-mono text-[11px] tracking-[1px] text-muted sm:col-span-1 sm:justify-end sm:text-[12px] lg:tracking-[1.6px]; }
+  .digit-context mark { @apply mx-1.5 shrink-0 rounded-md bg-lime px-2 py-1.5 text-canvas; }
+  .more-button { @apply mx-auto mt-5 flex items-center gap-3 rounded-lg border border-[#415331] px-5 py-3 text-xs text-sage transition hover:border-lime/60 hover:bg-lime/5 hover:text-lime; }
+  .explainer-section { @apply mt-12 grid gap-8 border-t border-line py-10 sm:mt-14 sm:py-12 md:grid-cols-[1fr_1.4fr] md:gap-16 lg:gap-24; }
+  .position-example { @apply flex flex-wrap items-center justify-between gap-3 rounded-lg border border-line bg-panel/50 px-4 py-3.5; }
+  .position-example mark { @apply mr-0.5 rounded-sm bg-lime px-1 text-canvas; }
+  .result-enter { animation: enter .35s ease-out both; }
+}
+
+@keyframes enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 380px) {
+  .site-shell { padding-inline: 18px; }
+  .hero-title { font-size: 46px; }
+  .hero-star { width: 32px; height: 32px; margin-left: 8px; }
+  .search-panel { padding: 16px; }
+  .search-button { padding-inline: 12px; gap: 7px; }
+  .search-input-wrap { gap: 5px; padding-left: 12px; }
+  .stat-card { padding-inline: 15px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
