@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { DatasetStatus, SearchResult } from '../types';
+import type { DatasetStatus, DeepSearchState, SearchResult } from '../types';
 import { PiSearchClient } from '../lib/piClient';
 
 export function usePiSearch() {
@@ -9,6 +9,7 @@ export function usePiSearch() {
   const [result, setResult] = useState<SearchResult | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [deep, setDeep] = useState<DeepSearchState | null>(null);
   const active = useRef<AbortController | null>(null);
   const client = useRef<PiSearchClient | null>(null);
   const getClient = useCallback(() => client.current ?? (client.current = new PiSearchClient()), []);
@@ -17,6 +18,7 @@ export function usePiSearch() {
     active.current?.abort();
     active.current = null;
     setLoading(false);
+    setDeep(null);
     const query = value.trim();
     setInput(query);
     if (!/^[0-9]{1,1000}$/.test(query)) {
@@ -34,8 +36,20 @@ export function usePiSearch() {
       const url = new URL(location.href);
       url.searchParams.set('q', query);
       history.replaceState(null, '', url);
+      if (data.count === 0) {
+        setLoading(false);
+        const startAfter = data.digitsSearched;
+        setDeep({ query, running: true, digitsSearched: startAfter, computing: startAfter * 2, elapsedMs: 0 });
+        const found = await getClient().deepSearch(query, startAfter, (progress) => {
+          if (!controller.signal.aborted) setDeep({ query, running: true, ...progress });
+        }, controller.signal);
+        if (controller.signal.aborted) return;
+        setDeep(null);
+        setResult({ query, count: 1, matches: [found.match], digitsSearched: found.digitsSearched, elapsedMs: found.elapsedMs, truncated: false, computed: true });
+      }
     } catch (err) {
       if (controller.signal.aborted) return;
+      setDeep(null);
       setError(err instanceof Error && err.message !== 'Failed to fetch' ? err.message : 'Couldn’t load the digits. Please try connecting again.');
     } finally {
       if (active.current === controller) setLoading(false);
@@ -61,9 +75,17 @@ export function usePiSearch() {
     return () => { controller.abort(); active.current?.abort(); client.current?.dispose(); client.current = null; };
   }, [loadDataset]);
 
+  /** Stops a running calculation but keeps how far it got on screen. */
+  const stopDeep = () => {
+    active.current?.abort();
+    active.current = null;
+    setDeep((state) => state && { ...state, running: false });
+  };
+
   const clear = () => {
     active.current?.abort();
     active.current = null;
+    setDeep(null);
     setInput('');
     setResult(null);
     setError('');
@@ -73,5 +95,5 @@ export function usePiSearch() {
     history.replaceState(null, '', url);
   };
 
-  return { dataset, datasetError, input, setInput, result, error, setError, loading, search, clear, retryDataset: () => loadDataset() };
+  return { dataset, datasetError, input, setInput, result, error, setError, loading, deep, stopDeep, search, clear, retryDataset: () => loadDataset() };
 }

@@ -13,6 +13,16 @@ export interface SearchResult {
   digitsSearched: number;
   elapsedMs: number;
   truncated: boolean;
+  /** Found by calculating π past the dataset; only the first appearance is known. */
+  computed?: boolean;
+}
+
+export interface DeepSearchState {
+  query: string;
+  running: boolean;
+  digitsSearched: number;
+  computing: number;
+  elapsedMs: number;
 }
 
 export interface DatasetStatus {

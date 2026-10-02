@@ -30,6 +30,12 @@ The server uses port 3000 by default. Set `PORT` and optionally `HOST` to change
 
 To generate a larger local dataset, run `python3 scripts/generate_pi.py --digits 2000000`, rebuild, and restart the server. The generator supports up to 10,000,000 digits; compute time and memory grow with size. `npm run setup` always restores the default one-million-digit dataset.
 
+## Searching beyond the stored digits
+
+Every search first scans the stored million digits and lists all matches. If there are none, a separate Web Worker calculates π further with the Chudnovsky series (binary splitting on native `BigInt`, `src/lib/piGenerator.ts`). It works in doubling rounds (2M, 4M, 8M, … digits) and scans only the digits new to each round, including the boundary between rounds (`src/lib/deepSearch.ts`). Each round's digits are discarded afterwards, and the search continues until the first appearance is found or the visitor stops it. Only the first appearance is reported for these searches.
+
+A sequence of *n* digits usually first appears near position 10ⁿ. On a typical laptop, 2M digits take about 5 s, 4M about 13 s and 8M about 30 s, so seven-digit sequences usually take a minute or two. Eight or more digits can take much longer and may exhaust memory on small devices.
+
 ## GitHub Pages
 
 The workflow in `.github/workflows/pages.yml` installs locked dependencies, generates the dataset, runs the typecheck/build/tests, builds with the `/Pie/` base path, and deploys the static artifact. In repository **Settings → Pages**, select **GitHub Actions** as the source. Pushes to `main` deploy automatically; the workflow can also be run manually from Actions.
